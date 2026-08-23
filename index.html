@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AXIOM Crystal Auth — Entropía Conductual</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: #05070a;
+    color: #e2e8f0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+.header {
+    text-align: center;
+    padding: 2rem 1rem 1rem;
+    border-bottom: 1px solid #1e293b;
+}
+.header h1 {
+    font-size: 2rem;
+    color: #00d4ff;
+    letter-spacing: -1px;
+}
+.header p {
+    color: #64748b;
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+}
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+@media (max-width: 900px) {
+    .container { grid-template-columns: 1fr; }
+}
+.panel {
+    background: #0a0e1a;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+.panel h2 {
+    font-size: 1.1rem;
+    color: #00d4ff;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+.track-area {
+    background: #0f172a;
+    border: 2px dashed #334155;
+    border-radius: 12px;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    cursor: crosshair;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+}
+.track-area.active {
+    border-color: #00d4ff;
+    background: rgba(0, 212, 255, 0.03);
+}
+.track-area canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+}
+.track-label {
+    position: relative;
+    z-index: 2;
+    color: #475569;
+    font-size: 0.9rem;
+    pointer-events: none;
+}
+.score-ring {
+    width: 180px;
+    height: 180px;
+    margin: 0 auto 1.5rem;
+    position: relative;
+}
+.score-ring svg {
+    transform: rotate(-90deg);
+}
+.score-value {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3rem;
+    font-weight: 800;
+    color: #00d4ff;
+}
+.score-label {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 1rem;
+}
+.metric-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid #1e293b;
+    font-size: 0.9rem;
+}
+.metric-row:last-child { border-bottom: none; }
+.metric-name { color: #94a3b8; }
+.metric-val { font-weight: 700; font-family: monospace; }
+.type-area {
+    width: 100%;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1rem;
+    color: #e2e8f0;
+    font-size: 1rem;
+    margin-top: 1rem;
+    resize: none;
+}
+.type-area:focus {
+    outline: none;
+    border-color: #00d4ff;
+}
+.btn {
+    background: linear-gradient(135deg, #00d4ff, #0891b2);
+    color: #0a0e1a;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 1rem;
+    width: 100%;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.btn:hover { opacity: 0.9; }
+.btn-secondary {
+    background: transparent;
+    border: 1px solid #334155;
+    color: #94a3b8;
+    margin-top: 0.5rem;
+}
+.status-box {
+    text-align: center;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+.status-human { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid #10b981; }
+.status-bot { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444; }
+.status-unclear { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid #f59e0b; }
+.footer {
+    text-align: center;
+    padding: 2rem;
+    color: #334155;
+    font-size: 0.8rem;
+    border-top: 1px solid #1e293b;
+    margin-top: 2rem;
+}
+.eq-box {
+    background: #0f172a;
+    border-left: 3px solid #00d4ff;
+    padding: 1rem;
+    margin: 1rem 0;
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+</style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔐 AXIOM CRYSTAL AUTH</h1>
+        <p>Motor de entropía conductual | S_b = α·(dv_c/dt)² + β·σ² + γ·D_KL</p>
+    </div>
+
+    <div class="container">
+        <!-- PANEL IZQUIERDO: INPUT -->
+        <div class="panel">
+            <h2>🖱️ Zona de Interacción</h2>
+            <div class="track-area" id="trackArea">
+                <canvas id="mouseCanvas"></canvas>
+                <div class="track-label" id="trackLabel">Mueve el ratón aquí</div>
+            </div>
+            
+            <h2 style="margin-top:1.5rem;">⌨️ Área de Texto</h2>
+            <textarea class="type-area" id="typeArea" rows="4" placeholder="Escribe este texto naturalmente: 'El motor AXIOM evalúa la consistencia conductual en tiempo real.'"></textarea>
+            
+            <button class="btn" id="btnAnalyze">▶ Calcular Score AXIOM</button>
+            <button class="btn btn-secondary" id="btnBot">🤖 Simular Movimiento de Bot</button>
+            <button class="btn btn-secondary" id="btnReset">↺ Reiniciar Perfil</button>
+        </div>
+
+        <!-- PANEL DERECHO: RESULTADOS -->
+        <div class="panel">
+            <h2>📊 Índice de Consistencia Conductual</h2>
+            
+            <div class="score-ring">
+                <svg width="180" height="180">
+                    <circle cx="90" cy="90" r="80" fill="none" stroke="#1e293b" stroke-width="12"/>
+                    <circle id="scoreCircle" cx="90" cy="90" r="80" fill="none" stroke="#00d4ff" 
+                            stroke-width="12" stroke-dasharray="502" stroke-dashoffset="502" 
+                            stroke-linecap="round"/>
+                </svg>
+                <div class="score-value" id="scoreValue">--</div>
+            </div>
+            <div class="score-label">Score S_b / 100</div>
+            
+            <div id="statusBox" class="status-box status-unclear" style="display:none;">
+                Esperando datos...
+            </div>
+
+            <div style="margin-top:1.5rem;">
+                <div class="metric-row">
+                    <span class="metric-name">Velocidad media (v_c)</span>
+                    <span class="metric-val" id="valVc">-- px/ms</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-name">Varianza (σ²)</span>
+                    <span class="metric-val" id="valSigma">--</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-name">Divergencia KL</span>
+                    <span class="metric-val" id="valKl">--</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-name">Muestras capturadas</span>
+                    <span class="metric-val" id="valSamples">0</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-name">Entropía de Shannon (H)</span>
+                    <span class="metric-val" id="valEntropy">-- bits</span>
+                </div>
+            </div>
+
+            <div class="eq-box">
+                S_b = 0.4·(dv_c/dt)² + 0.3·σ² + 0.3·D_KL(P_cur || P_base)
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        AXIOM LABS — Arquitectura de Sistemas de Misión Crítica<br>
+        Motor criptográfico CRYSTAL | Entropía conductual verificable del lado del cliente
+    </div>
+
+    <script src="./crystal.js"></script>
+</body>
+</html>
+
